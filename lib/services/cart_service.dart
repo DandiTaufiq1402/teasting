@@ -9,7 +9,6 @@ class CartService {
   CartService._internal();
 
   // List penyimpan data sementara
-  // PERHATIKAN: Nama variabelnya adalah '_items'
   final List<CartItem> _items = [];
 
   List<CartItem> get items => _items; 
@@ -37,14 +36,10 @@ class CartService {
     }
   }
 
-  // --- BAGIAN YANG DIPERBAIKI ---
   // Hapus item berdasarkan ID Product
   void removeItem(int id) {
-    // FIX 1: Gunakan '_items', bukan '_cartItems'
-    // FIX 2: Gunakan 'item.product.id' agar sesuai dengan logic addToCart
     _items.removeWhere((item) => item.product.id == id);
   }
-  // -----------------------------
 
   // Hitung Total Belanja
   double getTotalPrice() {
@@ -56,13 +51,37 @@ class CartService {
     _items.clear();
   }
 
-  // Checkout ke Supabase
+  // Checkout ke Supabase (DENGAN VALIDASI)
   Future<void> checkout() async {
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
 
     if (user == null) throw Exception("User tidak terdeteksi");
     if (_items.isEmpty) throw Exception("Keranjang kosong");
+
+    // --- VALIDASI STOK & PRODUK DIHAPUS ---
+    // Sebelum membuat order, kita cek dulu database apakah barangnya aman.
+    for (var item in _items) {
+      final productData = await supabase
+          .from('products')
+          .select('stock, is_deleted')
+          .eq('id', item.product.id)
+          .single();
+      
+      final bool isDeleted = productData['is_deleted'] ?? false;
+      final int currentStock = productData['stock'] ?? 0;
+
+      // 1. Cek apakah produk sudah dihapus admin
+      if (isDeleted) {
+        throw Exception("Maaf, produk '${item.product.name}' baru saja dihapus oleh Admin dan tidak lagi tersedia.");
+      }
+
+      // 2. Cek apakah stok cukup
+      if (currentStock < item.quantity) {
+         throw Exception("Stok '${item.product.name}' tidak mencukupi. Sisa stok: $currentStock");
+      }
+    }
+    // ----------------------------------------
 
     // 1. Buat Order
     final orderResponse = await supabase.from('orders').insert({

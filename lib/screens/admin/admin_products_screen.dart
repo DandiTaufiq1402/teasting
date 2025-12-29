@@ -29,12 +29,18 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
     {'id': 3, 'name': 'Accessories'},
   ];
 
+  // --- FILTER PRODUK YANG DIHAPUS ---
   Stream<List<Product>> _getProductsStream() {
     return _supabase
         .from('products')
         .stream(primaryKey: ['id'])
         .order('created_at')
-        .map((data) => data.map((json) => Product.fromJson(json)).toList());
+        .map(
+          (data) => data
+              .where((json) => json['is_deleted'] != true) // <--- INI PENTING
+              .map((json) => Product.fromJson(json))
+              .toList(),
+        );
   }
 
   Future<void> _pickImage() async {
@@ -69,35 +75,31 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
     }
   }
 
-  // --- FUNGSI HAPUS YANG SUDAH DIPERBAIKI ---
-  // Masukkan fungsi ini di dalam class _AdminProductsScreenState
-Future<void> _deleteProduct(int productId) async {
-  // 1. Definisikan supabase client
-  final supabase = Supabase.instance.client;
+  // --- FUNGSI DELETE (SOFT DELETE) ---
+  Future<void> _deleteProduct(int productId) async {
+    try {
+      // KITA TIDAK MENGHAPUS BARIS, TAPI CUMA UPDATE STATUS JADI 'DIHAPUS'
+      await _supabase
+          .from('products')
+          .update({'is_deleted': true})
+          .eq('id', productId);
 
-  try {
-    // 2. Lakukan Soft Delete (Update is_deleted jadi true)
-    await supabase.from('products').update({
-      'is_deleted': true
-    }).eq('id', productId);
+      if (!mounted) return;
 
-    // 3. Cek mounted sebelum pakai context (Mengatasi Error Async Gap)
-    if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Produk berhasil dihapus (disembunyikan)"),
+        ),
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Produk berhasil dihapus")),
-    );
-    
-    // Refresh list produk (panggil fungsi fetch kamu di sini, misal: _fetchProducts())
-    setState(() {}); 
-
-  } catch (e) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Gagal menghapus: $e")),
-    );
+      // Tidak perlu setState manual jika kamu pakai StreamBuilder yang sudah difilter
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Gagal menghapus: $e")));
+    }
   }
-}
 
   void _showFormDialog({Product? product}) {
     _imageBytes = null;
@@ -236,6 +238,8 @@ Future<void> _deleteProduct(int productId) async {
                           'image_url': finalImageUrl,
                           'description': descCtrl.text,
                           'category_id': _selectedCategoryId,
+                          // Pastikan saat insert baru, is_deleted false
+                          if (product == null) 'is_deleted': false,
                         };
 
                         try {
@@ -308,11 +312,18 @@ Future<void> _deleteProduct(int productId) async {
       body: StreamBuilder<List<Product>>(
         stream: _getProductsStream(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData)
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          final products = snapshot.data!;
-
-          if (products.isEmpty) {
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                "Error: ${snapshot.error}",
+                style: const TextStyle(color: Colors.white),
+              ),
+            );
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
               child: Text(
                 "Belum ada produk",
@@ -321,12 +332,14 @@ Future<void> _deleteProduct(int productId) async {
             );
           }
 
+          final products = snapshot.data!;
+
           return ListView.separated(
             padding: const EdgeInsets.all(8),
             itemCount: products.length,
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
-              final product = _products[index]; // Variable 'p' didefinisikan di sini
+              final product = products[index];
 
               return Card(
                 color: AppConstants.cardBgColor,
@@ -363,8 +376,13 @@ Future<void> _deleteProduct(int productId) async {
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
-                        // DI SINI KITA PANGGIL FUNGSI YANG BENAR:
-                        onPressed: () =>_deleteProduct(product.id),
+                        onPressed: () async {
+                          // Memanggil fungsi helper di bawah
+                          final confirm = await showDeleteConfirmation(context);
+                          if (confirm) {
+                            _deleteProduct(product.id);
+                          }
+                        },
                       ),
                     ],
                   ),
@@ -378,7 +396,7 @@ Future<void> _deleteProduct(int productId) async {
   }
 }
 
-// --- GLOBAL HELPER FUNCTION (Bisa ditaruh di file utils.dart) ---
+// --- GLOBAL HELPER FUNCTION (Ditambahkan kembali) ---
 Future<bool> showDeleteConfirmation(
   BuildContext context, {
   String title = "Hapus Data?",

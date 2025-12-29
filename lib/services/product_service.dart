@@ -16,7 +16,11 @@ class ProductService {
       }
 
       // Urutkan dari yang terbaru
-      final response = await query.order('created_at', ascending: false);
+      final response = await _supabase
+        .from('products')
+        .select()
+        .eq('is_deleted', false) // <--- TAMBAHKAN BARIS INI
+        .order('created_at', ascending: false);
 
       // Konversi data JSON ke List<Product>
       final data = response as List<dynamic>;
