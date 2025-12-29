@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "284552705008",
+    "project_id": "vape-violence",
+    "storage_bucket": "vape-violence.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:284552705008:android:b4c17bf3af895aa8aae335",
+        "android_client_info": {
+          "package_name": "com.example.project_jasun"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqXmU05tbEW2tI5GYv9c3GXrTQX59tBP0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
