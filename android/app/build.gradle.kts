@@ -43,5 +43,5 @@ flutter {
 
 // 2. TAMBAHAN WAJIB (Taruh di paling bawah, di luar kurung android {})
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

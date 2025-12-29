@@ -1,5 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/services.dart'; // Penting untuk fitur Copy
 
 // Handler untuk background message (harus di luar class/top-level)
 @pragma('vm:entry-point')
@@ -81,8 +82,15 @@ class NotificationService {
       }
     });
 
-    // 6. Cek Token FCM (untuk testing kirim pesan)
+    // 6. Cek Token FCM & AUTO COPY
     final fcmToken = await _firebaseMessaging.getToken();
     print('FCM Token Anda: $fcmToken');
+
+    // --- BAGIAN INI YANG MENYALIN OTOMATIS ---
+    if (fcmToken != null) { 
+      await Clipboard.setData(ClipboardData(text: fcmToken));
+      print("📋 SUKSES! Token sudah dicopy ke Clipboard HP Anda.");
+      print("   (Silakan langsung 'Paste' di website Firebase)");
+    }
   }
 }
