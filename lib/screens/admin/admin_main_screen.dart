@@ -45,20 +45,20 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
           )
         ],
       ),
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        backgroundColor: AppConstants.cardBgColor,
-        selectedItemColor: AppConstants.accentColor,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.inventory), label: "Produk"),
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_bag), label: "Order"),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: "Users"),
-        ],
-      ),
-    );
+        body: _pages[_selectedIndex],
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: (index) => setState(() => _selectedIndex = index),
+          backgroundColor: AppConstants.cardBgColor,
+          selectedItemColor: AppConstants.accentColor,
+          unselectedItemColor: Colors.grey,
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.inventory), label: "Produk"),
+            BottomNavigationBarItem(icon: Icon(Icons.shopping_bag), label: "Order"),
+            BottomNavigationBarItem(icon: Icon(Icons.people), label: "Users"),
+          ],
+        ),
+      );
+    }
   }
-}

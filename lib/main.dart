@@ -14,12 +14,11 @@ void main() async {
     // Pastikan file android/app/google-services.json sudah ada!
     await Firebase.initializeApp();
     print("✅ Firebase berhasil diinisialisasi");
-    
+
     // 3. Coba Inisialisasi Notification Service
     // Jika file ini error, cek apakah class NotificationService sudah dibuat dengan benar
     await NotificationService().initialize();
     print("✅ Notification Service berhasil diinisialisasi");
-
   } catch (e) {
     // Jika error, cetak di konsol agar ketahuan
     print("❌ ERROR INIT FIREBASE/NOTIF: $e");

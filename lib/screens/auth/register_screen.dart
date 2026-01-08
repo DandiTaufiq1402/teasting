@@ -20,7 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  bool _isLoading = false;
+  bool _isLoading = false; 
 
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
